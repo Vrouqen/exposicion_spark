@@ -1,14 +1,4 @@
 services:
-
-  netcat-server:
-    image: busybox
-    container_name: netcat-server
-    command: sh -c "while true; do nc -lk -p 9999 -e /bin/cat; done"
-    ports:
-      - "9999:9999"   # Netcat server port
-    networks:
-      - bigdata-net
-
   kafka:
     image: wurstmeister/kafka
     container_name: kafka
