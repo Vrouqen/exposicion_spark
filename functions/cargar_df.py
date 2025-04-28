@@ -1,10 +1,15 @@
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import col
+import logging
 
 # Creación de la sesión de Spark
 s_session = SparkSession.builder \
     .appName("Carga_df") \
     .getOrCreate()
+
+# Reducir la verbosidad de los logs
+s_session.sparkContext.setLogLevel("WARN")
+logging.getLogger("py4j").setLevel(logging.ERROR)
 
 # Lectura del stream desde Kafka
 df_anemia = s_session.readStream \

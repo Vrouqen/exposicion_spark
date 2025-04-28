@@ -1,0 +1,7 @@
+kafka-topics.sh --create --topic DB_Kafka --bootstrap-server localhost:9092 --replication-factor 1 --partitions 1
+kafka-topics.sh --delete --bootstrap-server localhost:9092 --topic DB_Kafka
+
+kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic DB_Kafka --from-beginning
+
+spark-submit --packages org.apache.spark:spark-sql-kafka-0-10_2.12:3.1.2 /functions/promedio_calificacions.py
+spark-submit --packages org.apache.spark:spark-sql-kafka-0-10_2.12:3.1.2 /functions/promedio_calificacions.py

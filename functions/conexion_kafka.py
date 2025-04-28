@@ -3,9 +3,9 @@ import time
 import pandas
 
 # Conectamos al docker de Kafka
-conn = KafkaProducer(bootstrap_servers=['192.168.200.12:9092'])
+conn = KafkaProducer(bootstrap_servers=['10.5.2.254:9092'])
 
-df = pandas.read_csv(r'C:\Users\luise\Desktop\Mineria\Practicas\Ejemplo_practico_spark\functions\anemia_dataset.csv')
+df = pandas.read_csv(r'C:\Users\dayascaribay\Desktop\exposicion_spark\functions\bebidas_data.csv')
 
 for _, row in df.iterrows():
     message = row.to_json()
