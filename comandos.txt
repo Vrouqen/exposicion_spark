@@ -1,7 +1,16 @@
+docker exec -it kafka bash
+kafka-topics.sh --list --bootstrap-server 192.168.200.12:9092
+
 kafka-topics.sh --create --topic DB_Kafka --bootstrap-server localhost:9092 --replication-factor 1 --partitions 1
 kafka-topics.sh --delete --bootstrap-server localhost:9092 --topic DB_Kafka
 
 kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic DB_Kafka --from-beginning
 
 spark-submit --packages org.apache.spark:spark-sql-kafka-0-10_2.12:3.1.2 /functions/promedio_calificacions.py
-spark-submit --packages org.apache.spark:spark-sql-kafka-0-10_2.12:3.1.2 /functions/promedio_calificacions.py
+spark-submit --packages org.apache.spark:spark-sql-kafka-0-10_2.12:3.1.2 /functions/cargar_df_hadoop.py
+
+hdfs dfs -get /user/spark/output/datos_csv/part-00000-9684ac62-5f5b-42ce-a6f7-037d8a27a1a8-c000.csv /tmp/
+docker cp namenode:/tmp/part-00000-9684ac62-5f5b-42ce-a6f7-037d8a27a1a8-c000.csv C:/Users/luise/Desktop
+
+hdfs dfs -getmerge /user/spark/output/datos_csv /tmp/datos_completos.csv
+docker cp namenode:/tmp/datos_completos.csv C:/Users/luise/Desktop

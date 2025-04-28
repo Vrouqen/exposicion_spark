@@ -1,10 +1,15 @@
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import col, avg, round
+from pyspark.sql.functions import col, from_json
+from pyspark.sql.types import StructType, StructField, StringType, FloatType
 import logging
 
 # Creación de la sesión de Spark
 s_session = SparkSession.builder \
-    .appName("PromedioSaborPorMarca") \
+    .appName("GuardarCSV_HDFS") \
+    .config("spark.executor.memory", "8g") \
+    .config("spark.driver.memory", "8g") \
+    .config("spark.sql.shuffle.partitions", "10") \
+    .config("spark.hadoop.fs.defaultFS", "hdfs://namenode:9000") \
     .getOrCreate()
 
 # Reducir la verbosidad de los logs
@@ -16,18 +21,15 @@ df_kafka = s_session.readStream \
     .format("kafka") \
     .option("kafka.bootstrap.servers", "192.168.200.12:9092") \
     .option("subscribe", "DB_Kafka") \
+    .option("startingOffsets", "earliest") \
     .load()
 
-# Extraemos el valor (mensaje) y lo convertimos en formato JSON
+# Extraemos el valor (mensaje) y lo convertimos en string
 df_kafka = df_kafka.select(
     col("value").cast("string").alias("json_data")
 )
 
-# Importamos librerías para manipular los JSONs
-from pyspark.sql.functions import from_json
-from pyspark.sql.types import StructType, StructField, StringType, FloatType
-
-# Definimos el esquema de los datos (basado en el CSV original)
+# Definimos el esquema (igual que el CSV original)
 schema = StructType([
     StructField("MARCA", StringType(), True),
     StructField("GÉNERO", StringType(), True),
@@ -43,18 +45,16 @@ schema = StructType([
     StructField("JUVENTUD", FloatType(), True)
 ])
 
-# Convertimos el JSON a un DataFrame estructurado
+# Convertimos el JSON a columnas estructuradas
 df = df_kafka.select(from_json(col("json_data"), schema).alias("data")).select("data.*")
 
-# Ahora calculamos el promedio del sabor por marca
-df_avg_sabor = df.groupBy("MARCA").agg(
-    round(avg("SABOR"), 2).alias("PROM_SABOR")
-)
-
-# Mostrar los resultados en la consola
-query = df_avg_sabor.writeStream \
-    .outputMode("complete") \
-    .format("console") \
+# Guardamos el DataFrame directamente en HDFS como CSV
+query = df.writeStream \
+    .outputMode("append") \
+    .format("csv") \
+    .option("path", "hdfs://namenode:9000/user/spark/output/datos_csv") \
+    .option("checkpointLocation", "hdfs://namenode:9000/user/spark/checkpoint/datos_csv") \
+    .option("header", "true") \
     .start()
 
 query.awaitTermination()
